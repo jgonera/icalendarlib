@@ -1,0 +1,101 @@
+# depslib dependency file v1.0
+1214399769 source:/media/d/docs/programy/remindme/icalendar/date.cpp
+	"date.h"
+	"date.h"
+	"date.h"
+	<iostream>
+
+1214399769 
+
+1214397463 /media/d/docs/programy/remindme/icalendar/date.h
+	<string>
+	<ctime>
+	<string>
+	<ctime>
+	<string>
+	<ctime>
+
+1214491727 source:/media/d/docs/programy/remindme/icalendar/icalendar.cpp
+	"icalendar.h"
+	"icalendar.h"
+	"icalendar.h"
+	<iostream>
+
+1214404288 .h"
+
+1214492473 /media/d/docs/programy/remindme/icalendar/icalendar.h
+	<fstream>
+	<cstdlib>
+	<ctime>
+	"types.h"
+	<fstream>
+	<cstdlib>
+	<ctime>
+	"types.h"
+	<fstream>
+	<cstdlib>
+	<ctime>
+	"types.h"
+
+1214437161 /media/d/docs/programy/remindme/icalendar/types.h
+	<string>
+	<list>
+	"date.h"
+	<string>
+	<list>
+	"date.h"
+	<string>
+	<list>
+	"date.h"
+
+1214436098 source:/media/d/docs/programy/remindme/icalendar/types.cpp
+	"types.h"
+	"types.h"
+	"types.h"
+	<iostream>
+
+1214492447 source:/media/d/docs/programy/remindme/icalendar/main.cpp
+	<iostream>
+	<ctime>
+	<fstream>
+	"icalendar.h"
+	<iostream>
+	<ctime>
+	<fstream>
+	"icalendar.h"
+	<iostream>
+	<ctime>
+	<fstream>
+	"icalendar.h"
+
+1214912824 source:d:\docs\programy\remindme\icalendar\icalendar.cpp
+	"icalendar.h"
+	<iostream>
+
+1214492473 d:\docs\programy\remindme\icalendar\icalendar.h
+	<fstream>
+	<cstdlib>
+	<ctime>
+	"types.h"
+
+1214527691 d:\docs\programy\remindme\icalendar\types.h
+	<string>
+	<list>
+	"date.h"
+
+1214397463 d:\docs\programy\remindme\icalendar\date.h
+	<string>
+	<ctime>
+
+1214576024 source:d:\docs\programy\remindme\icalendar\types.cpp
+	"types.h"
+
+1215004341 source:d:\docs\programy\remindme\icalendar\date.cpp
+	"date.h"
+
+1215004311 source:d:\docs\programy\remindme\icalendar\main.cpp
+	<iostream>
+	<ctime>
+	<fstream>
+	"icalendar.h"
+
