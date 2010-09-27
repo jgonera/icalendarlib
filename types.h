@@ -8,8 +8,8 @@
 using namespace std;
 
 struct DeleteItem {
-  template <typename T>
-  void operator()(T *ptr) { delete ptr; }
+	template <typename T>
+	void operator()(T *ptr) { delete ptr; }
 };
 
 // Custom data types
@@ -71,15 +71,15 @@ struct Event {
 		if (BaseEvent == this)
 			delete Alarms;
 	}
-  operator string() const;
-  bool HasAlarm(const Date &From, const Date &To);
-  
-  string UID, Summary, Description, Categories;
-  Date DtStamp, DtStart, DtEnd;
-  Recurrence RRule;
-  list<Alarm> *Alarms;
-  unsigned short RecurrenceNo;
-  Event *BaseEvent;
+	operator string() const;
+	bool HasAlarm(const Date &From, const Date &To);
+
+	string UID, Summary, Description, Categories;
+	Date DtStamp, DtStart, DtEnd;
+	Recurrence RRule;
+	list<Alarm> *Alarms;
+	unsigned short RecurrenceNo;
+	Event *BaseEvent;
 };
 
 struct EventsCriteria {

@@ -12,19 +12,19 @@ using namespace std;
 
 class ICalendar {
 public:
-  ICalendar(const char *FileName): FileName((char *)FileName) { LoadFromFile(); }
-  ~ICalendar() {
-  	for_each(Events.begin(), Events.end(), DeleteItem());
+	ICalendar(const char *FileName): FileName((char *)FileName) { LoadFromFile(); }
+	~ICalendar() {
+		for_each(Events.begin(), Events.end(), DeleteItem());
 	}
-  void LoadFromFile();
-  
+	void LoadFromFile();
+
 	//Event* GetEventByUID(char *UID);
-  
-  void AddEvent(Event *NewEvent);
-  void DeleteEvent(Event *DeletedEvent);
-  void ModifyEvent(Event *ModifiedEvent);
-  
-  class Query;
+
+	void AddEvent(Event *NewEvent);
+	void DeleteEvent(Event *DeletedEvent);
+	void ModifyEvent(Event *ModifiedEvent);
+
+	class Query;
 	
 private:
 	string GetProperty(const string &Line) const {
@@ -49,8 +49,8 @@ private:
 		Line += "\r\n";
 	}
 	
-  char *FileName;
-  list<Event *> Events;
+	char *FileName;
+	list<Event *> Events;
 };
 
 class ICalendar::Query {
@@ -58,9 +58,9 @@ public:
 	Query(ICalendar *Calendar): Calendar(Calendar), EventsIterator(Calendar->Events.begin()) {}
 	~Query() { for_each(RecurrentEvents.begin(), RecurrentEvents.end(), DeleteItem()); }
 	void ResetPosition() {
-  	for_each(RecurrentEvents.begin(), RecurrentEvents.end(), DeleteItem());
-  	RecurrentEvents.clear();
-  	EventsIterator = Calendar->Events.begin();
+	  	for_each(RecurrentEvents.begin(), RecurrentEvents.end(), DeleteItem());
+	  	RecurrentEvents.clear();
+	  	EventsIterator = Calendar->Events.begin();
 	}
 	Event* GetNextEvent(bool WithAlarm = false);
 	
@@ -68,8 +68,8 @@ public:
 	
 private:
 	ICalendar *Calendar;
-  list<Event *> RecurrentEvents;
-  list<Event *>::iterator EventsIterator;
+	list<Event *> RecurrentEvents;
+	list<Event *>::iterator EventsIterator;
 };
 
 inline TimeUnit ConvertFrequency(string Name) {
