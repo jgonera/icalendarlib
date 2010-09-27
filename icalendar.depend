@@ -5,7 +5,7 @@
 	"date.h"
 	<iostream>
 
-1214399769 
+1215004341 
 
 1214397463 /media/d/docs/programy/remindme/icalendar/date.h
 	<string>
@@ -21,7 +21,7 @@
 	"icalendar.h"
 	<iostream>
 
-1214404288 .h"
+1215004311 .h"
 
 1214492473 /media/d/docs/programy/remindme/icalendar/icalendar.h
 	<fstream>
@@ -94,6 +94,40 @@
 	"date.h"
 
 1215004311 source:d:\docs\programy\remindme\icalendar\main.cpp
+	<iostream>
+	<ctime>
+	<fstream>
+	"icalendar.h"
+
+1215004473 source:/home/julas/icalendar/date.cpp
+	"date.h"
+
+1285583716 /home/julas/icalendar/date.h
+	<string>
+	<cstdio>
+	<ctime>
+
+1214576024 source:/home/julas/icalendar/types.cpp
+	"types.h"
+
+1285583280 /home/julas/icalendar/types.h
+	<string>
+	<list>
+	"date.h"
+
+1285583304 source:/home/julas/icalendar/icalendar.cpp
+	"icalendar.h"
+	<iostream>
+
+1285583154 /home/julas/icalendar/icalendar.h
+	<fstream>
+	<algorithm>
+	<cstdlib>
+	<ctime>
+	<cstring>
+	"types.h"
+
+1285584319 source:/home/julas/icalendar/main.cpp
 	<iostream>
 	<ctime>
 	<fstream>

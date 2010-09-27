@@ -13,6 +13,9 @@ int main() {
 	a = "20080627T140000";
 	b = "20080626T100000";
 	
+	a[MINUTE] -= 65;
+
+	cout << a << endl;
 	cout << a.Difference(b, HOUR) << endl;
 	
 	ICalendar Calendar("calendar.ics");
@@ -21,8 +24,8 @@ int main() {
 
 	srand(time(NULL));
 
-	SearchQuery.Criteria.From = "20080627T000000";
-	SearchQuery.Criteria.To = "20080627T235959";
+	SearchQuery.Criteria.From = "20100927T000000";
+	SearchQuery.Criteria.To = "20100927T235959";
 	// SearchQuery.Criteria.To[HOUR] = 23;
 	// SearchQuery.Criteria.To[MINUTE] = 59;
 	// SearchQuery.Criteria.To[SECOND] = 59;
@@ -45,14 +48,9 @@ int main() {
 
 	Event *NewEvent = new Event;
 	NewEvent->Summary = "test";
+	a.SetToNow();
+	NewEvent->DtStart = a;
 	Calendar.AddEvent(NewEvent);
-
-	Date a;
-
-	a = "20080625T132400";
-	a[MINUTE] -= 25;
-
-	cout << a << endl;
 
 	return 0;
 }
