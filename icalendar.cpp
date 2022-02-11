@@ -322,9 +322,9 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
 				if (Rest != 0)
 					Difference += RecurrentEvent->RRule.Interval - Rest;
 				
-				cout << Criteria.From.Format() << endl;
-				cout << DtEnd.Format() << endl;
-				cout << Difference << endl;
+				//cout << Criteria.From.Format() << endl;
+				//cout << DtEnd.Format() << endl;
+				//cout << Difference << endl;
 				RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += Difference;
 				DtEnd[RecurrentEvent->RRule.Freq] += Difference;
 				RecurrentEvent->RecurrenceNo = Difference / RecurrentEvent->RRule.Interval;
