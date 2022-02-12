@@ -11,7 +11,7 @@ typedef enum { YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, WEEK } TimeUnit;
 
 class Date {
 private:
-	const char Compare(const Date &OtherDate, TimeUnit FromPart = YEAR) const {
+	const int Compare(const Date &OtherDate, TimeUnit FromPart = YEAR) const {
 		for (;FromPart <= SECOND; FromPart = (TimeUnit)(FromPart+1)) {
 			if (Data[FromPart] < OtherDate.Data[FromPart])
 				return -1;
