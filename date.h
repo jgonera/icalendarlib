@@ -1,6 +1,8 @@
 #ifndef _DATE_H
 #define _DATE_H
 
+// todo: Would probably be much better to refactor this to using date/tz library
+
 #include <string>
 #include <cstdio>
 #include <ctime>
@@ -77,6 +79,7 @@ public:
 	}
 	
 	bool WithTime;
+	std::string tzid;
 };
 
 class Date::DatePart {

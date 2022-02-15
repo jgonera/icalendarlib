@@ -5,6 +5,7 @@ string Date::Format() const {
 	sprintf(Temp, "%.4d/%.2d/%.2d", Data[YEAR], Data[MONTH], Data[DAY]);
 	if (WithTime == true)
 		sprintf(Temp+10, " %.2d:%.2d", Data[HOUR], Data[MINUTE]);
+	if (tzid.size() > 0) return string(Temp) + ' ' + tzid;
 	return string(Temp);
 }
 

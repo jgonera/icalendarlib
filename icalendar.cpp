@@ -53,6 +53,7 @@ void ICalendar::LoadFromFile() {
 					NewEvent->DtStamp = GetProperty(Line);
 				} else if (Line.find("DTSTART") == 0) {
 					NewEvent->DtStart = GetProperty(Line);
+					NewEvent->DtStart.tzid = GetSubProperty(Line, "TZID");
 				} else if (Line.find("DTEND") == 0) {
 					NewEvent->DtEnd = GetProperty(Line);
 				} else if (Line.find("DESCRIPTION") == 0) {
