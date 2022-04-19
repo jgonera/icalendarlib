@@ -1,7 +1,7 @@
 #include "types.h"
 
 Recurrence::operator string() const {
-	char Temp[5];
+	char Temp[6];
 	string Text = "FREQ=";
 	switch (Freq) {
 		case YEAR: Text += "YEARLY"; break;
