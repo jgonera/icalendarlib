@@ -52,7 +52,7 @@ struct Alarm {
 };
 
 struct Event {
-	Event(): Alarms(new list<Alarm>), RecurrenceNo(0), BaseEvent(this) {}
+	Event(): Alarms(new list<Alarm>), ExDates(new list<Date>), RecurrenceNo(0), BaseEvent(this) {}
 	Event(const Event &Base):
 		UID(Base.UID),
 		Summary(Base.Summary),
@@ -63,13 +63,16 @@ struct Event {
 		DtEnd(Base.DtEnd),
 		RRule(Base.RRule),
 		Alarms(Base.Alarms),
+		ExDates(Base.ExDates),
 		RecurrenceNo(Base.RecurrenceNo)
 	{
 		BaseEvent = Base.BaseEvent == (Event *)&Base ? (Event *)&Base : Base.BaseEvent;
 	}
 	~Event() {
-		if (BaseEvent == this)
+		if (BaseEvent == this) {
 			delete Alarms;
+			delete ExDates;
+		}
 	}
 	operator string() const;
 	bool HasAlarm(const Date &From, const Date &To);
@@ -78,6 +81,7 @@ struct Event {
 	Date DtStamp, DtStart, DtEnd;
 	Recurrence RRule;
 	list<Alarm> *Alarms;
+        list<Date> *ExDates;
 	unsigned short RecurrenceNo;
 	Event *BaseEvent;
 };

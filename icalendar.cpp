@@ -56,6 +56,12 @@ void ICalendar::LoadFromFile() {
 					NewEvent->DtStart.tzid = GetSubProperty(Line, "TZID");
 				} else if (Line.find("DTEND") == 0) {
 					NewEvent->DtEnd = GetProperty(Line);
+					NewEvent->DtEnd.tzid = GetSubProperty(Line, "TZID");
+				} else if (Line.find("EXDATE") == 0) {
+					Date d; 
+                                        d = GetProperty(Line);
+                                        d.tzid = GetSubProperty(Line, "TZID");
+                                        NewEvent->ExDates->push_back(d);
 				} else if (Line.find("DESCRIPTION") == 0) {
 					NewEvent->Description = GetProperty(Line);
 				} else if (Line.find("CATEGORIES") == 0) {
@@ -257,105 +263,115 @@ void ICalendar::ModifyEvent(Event *ModifiedEvent) {
 /// ICalendar::Query
 
 Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
-	static Event *RecurrentEvent = NULL;
-	/* not all events have DtEnd, but we need some DtEnd for various checks,
-	   so we will use this for temporary DtEnd derived from DtStart (following
-	   RFC 2445, 4.6.1) */
-	Date DtEnd;
-	unsigned long Difference;
-	unsigned short Rest;
+   bool exclude;
+   Event* next;
+   do {
+      next = nullptr;
+      static Event *RecurrentEvent = nullptr;
+      /* not all events have DtEnd, but we need some DtEnd for various checks,
+         so we will use this for temporary DtEnd derived from DtStart (following
+         RFC 2445, 4.6.1) */
+      Date DtEnd;
+      unsigned long Difference;
+      unsigned short Rest;
 
-	if (RecurrentEvent != NULL) {
-		RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
-		if (!RecurrentEvent->DtEnd.IsEmpty())
-			RecurrentEvent->DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
-		++RecurrentEvent->RecurrenceNo;
+      if (RecurrentEvent != NULL) {
+         RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
+         if (!RecurrentEvent->DtEnd.IsEmpty())
+            RecurrentEvent->DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
+         ++RecurrentEvent->RecurrenceNo;
 
-		if (
-		(!WithAlarm &&
-		RecurrentEvent->DtStart <= Criteria.To &&
-		(RecurrentEvent->RRule.Until.IsEmpty() || RecurrentEvent->RRule.Until >= RecurrentEvent->DtStart) &&
-		(RecurrentEvent->RRule.Count == 0 || RecurrentEvent->RecurrenceNo < RecurrentEvent->RRule.Count)) ||
-		(WithAlarm && RecurrentEvent->HasAlarm(Criteria.From, Criteria.To))
-		) {
-			RecurrentEvents.push_back(new Event(*RecurrentEvent));
-			return RecurrentEvents.back();
-		}
+         if (
+               (!WithAlarm &&
+                RecurrentEvent->DtStart <= Criteria.To &&
+                (RecurrentEvent->RRule.Until.IsEmpty() || RecurrentEvent->RRule.Until >= RecurrentEvent->DtStart) &&
+                (RecurrentEvent->RRule.Count == 0 || RecurrentEvent->RecurrenceNo < RecurrentEvent->RRule.Count)) ||
+               (WithAlarm && RecurrentEvent->HasAlarm(Criteria.From, Criteria.To))
+            ) {
+            RecurrentEvents.push_back(new Event(*RecurrentEvent));
+            next = RecurrentEvents.back();
+         }
+         else {
+            delete RecurrentEvent;
+            RecurrentEvent = NULL;
+         }
+      }
 
-		delete RecurrentEvent;
-		RecurrentEvent = NULL;
-	}
+      if ((RecurrentEvent == nullptr) && (next == nullptr)) {
+         for (; EventsIterator != Calendar->Events.end(); ++EventsIterator) {
+            if ((*EventsIterator)->DtEnd.IsEmpty()) {
+               DtEnd = (*EventsIterator)->DtStart;
+               if ((*EventsIterator)->DtStart.WithTime == false)
+                  ++DtEnd[DAY];
+            } else {
+               DtEnd = (*EventsIterator)->DtEnd;
+            }
 
-	if (RecurrentEvent == NULL) {
-		for (; EventsIterator != Calendar->Events.end(); ++EventsIterator) {
-			if ((*EventsIterator)->DtEnd.IsEmpty()) {
-				DtEnd = (*EventsIterator)->DtStart;
-				if ((*EventsIterator)->DtStart.WithTime == false)
-					++DtEnd[DAY];
-			} else {
-				DtEnd = (*EventsIterator)->DtEnd;
-			}
+            if (
+                  Criteria.AllEvents == true || (
+                     !WithAlarm &&
+                     // DtEnd is non-inclusive (according to RFC 2445)
+                     (DtEnd > Criteria.From || (*EventsIterator)->DtStart >= Criteria.From) &&
+                     (*EventsIterator)->DtStart <= Criteria.To
+                     ) ||
+                  (WithAlarm && (*EventsIterator)->HasAlarm(Criteria.From, Criteria.To))
+               ) {
+               if (Criteria.AllEvents == false && Criteria.IncludeRecurrent == true && (*EventsIterator)->RRule.IsEmpty() == false)
+                  RecurrentEvent = new Event(**EventsIterator);
+               next = *(EventsIterator++);
 
-			if (
-			Criteria.AllEvents == true || (
-			!WithAlarm &&
-			// DtEnd is non-inclusive (according to RFC 2445)
-			(DtEnd > Criteria.From || (*EventsIterator)->DtStart >= Criteria.From) &&
-			(*EventsIterator)->DtStart <= Criteria.To
-			) ||
-			(WithAlarm && (*EventsIterator)->HasAlarm(Criteria.From, Criteria.To))
-			) {
-				if (Criteria.AllEvents == false && Criteria.IncludeRecurrent == true && (*EventsIterator)->RRule.IsEmpty() == false)
-					RecurrentEvent = new Event(**EventsIterator);
-				return *(EventsIterator++);
+            } else if (
+                  (*EventsIterator)->RRule.IsEmpty() == false &&
+                  (*EventsIterator)->DtStart < Criteria.From &&
+                  ((*EventsIterator)->RRule.Until.IsEmpty() || (*EventsIterator)->RRule.Until >= Criteria.From) &&
+                  Criteria.IncludeRecurrent == true
+                  ) {
+               RecurrentEvent = new Event(**EventsIterator);
 
-			} else if (
-			(*EventsIterator)->RRule.IsEmpty() == false &&
-			(*EventsIterator)->DtStart < Criteria.From &&
-			((*EventsIterator)->RRule.Until.IsEmpty() || (*EventsIterator)->RRule.Until >= Criteria.From) &&
-			Criteria.IncludeRecurrent == true
-			) {
-				RecurrentEvent = new Event(**EventsIterator);
+               Difference = Criteria.From.Difference(DtEnd, RecurrentEvent->RRule.Freq);
+               Rest = Difference%RecurrentEvent->RRule.Interval;
 
-				Difference = Criteria.From.Difference(DtEnd, RecurrentEvent->RRule.Freq);
-				Rest = Difference%RecurrentEvent->RRule.Interval;
+               if (Rest != 0)
+                  Difference += RecurrentEvent->RRule.Interval - Rest;
 
-				if (Rest != 0)
-					Difference += RecurrentEvent->RRule.Interval - Rest;
-				
-				//cout << Criteria.From.Format() << endl;
-				//cout << DtEnd.Format() << endl;
-				//cout << Difference << endl;
-				RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += Difference;
-				DtEnd[RecurrentEvent->RRule.Freq] += Difference;
-				RecurrentEvent->RecurrenceNo = Difference / RecurrentEvent->RRule.Interval;
+               //cout << Criteria.From.Format() << endl;
+               //cout << DtEnd.Format() << endl;
+               //cout << Difference << endl;
+               RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += Difference;
+               DtEnd[RecurrentEvent->RRule.Freq] += Difference;
+               RecurrentEvent->RecurrenceNo = Difference / RecurrentEvent->RRule.Interval;
 
-				// <= because DtEnd is non-inclusive (according to RFC 2445)
-				while (DtEnd <= Criteria.From) {
-					RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
-					DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
-					++RecurrentEvent->RecurrenceNo;
-				}
+               // <= because DtEnd is non-inclusive (according to RFC 2445)
+               while (DtEnd <= Criteria.From) {
+                  RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
+                  DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
+                  ++RecurrentEvent->RecurrenceNo;
+               }
 
-				if (
-				(!WithAlarm &&
-				RecurrentEvent->DtStart <= Criteria.To &&
-				// < because DtStart counts as the first occurence
-				(RecurrentEvent->RRule.Count == 0 || RecurrentEvent->RecurrenceNo < RecurrentEvent->RRule.Count)) ||
-				(WithAlarm && RecurrentEvent->HasAlarm(Criteria.From, Criteria.To))
-				) {
-					++EventsIterator;
-					if (!RecurrentEvent->DtEnd.IsEmpty())
-						RecurrentEvent->DtEnd = DtEnd;
-					RecurrentEvents.push_back(new Event(*RecurrentEvent));
-					return RecurrentEvents.back();
-				}
+               if (
+                     (!WithAlarm &&
+                      RecurrentEvent->DtStart <= Criteria.To &&
+                      // < because DtStart counts as the first occurence
+                      (RecurrentEvent->RRule.Count == 0 || RecurrentEvent->RecurrenceNo < RecurrentEvent->RRule.Count)) ||
+                     (WithAlarm && RecurrentEvent->HasAlarm(Criteria.From, Criteria.To))
+                  ) {
+                  ++EventsIterator;
+                  if (!RecurrentEvent->DtEnd.IsEmpty())
+                     RecurrentEvent->DtEnd = DtEnd;
+                  RecurrentEvents.push_back(new Event(*RecurrentEvent));
+                  next = RecurrentEvents.back();
+                  break;
+               }
 
-				delete RecurrentEvent;
-				RecurrentEvent = NULL;
-			}
-		}
-	}
+               delete RecurrentEvent;
+               RecurrentEvent = NULL;
+            }
+         }
+      }
 
-	return NULL;
+      exclude = next && (std::find_if(next->ExDates->begin(), next->ExDates->end(), 
+            [next](const Date &d) { return d == next->DtStart; }) != next->ExDates->end());
+
+   } while (exclude);
+   return next;
 }
