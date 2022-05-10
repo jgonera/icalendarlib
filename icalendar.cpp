@@ -1,6 +1,8 @@
 #include "icalendar.h"
 #include <iostream>
 
+constexpr bool debug = false;
+
 void ICalendar::LoadFromFile() {
 	string Line, NextLine;
 	Component CurrentComponent = VCALENDAR, PrevComponent = VCALENDAR;
@@ -275,12 +277,13 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
       unsigned long Difference;
       unsigned short Rest;
 
+
       if (RecurrentEvent != NULL) {
          RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
          if (!RecurrentEvent->DtEnd.IsEmpty())
             RecurrentEvent->DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
          ++RecurrentEvent->RecurrenceNo;
-
+	 if (debug) std::cout << "Considering (R): " << RecurrentEvent->DtStart.Format() << " " << RecurrentEvent->Summary;
          if (
                (!WithAlarm &&
                 RecurrentEvent->DtStart <= Criteria.To &&
@@ -290,10 +293,12 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
             ) {
             RecurrentEvents.push_back(new Event(*RecurrentEvent));
             next = RecurrentEvents.back();
+	    if (debug) std::cout << " [match]" << std::endl;
          }
          else {
             delete RecurrentEvent;
             RecurrentEvent = NULL;
+	    if (debug) std::cout << std::endl;
          }
       }
 
@@ -307,6 +312,7 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
                DtEnd = (*EventsIterator)->DtEnd;
             }
 
+            if (debug) std::cout << "Considering:     " << (*EventsIterator)->DtStart.Format() << " " << (*EventsIterator)->Summary;
             if (
                   Criteria.AllEvents == true || (
                      !WithAlarm &&
@@ -319,6 +325,8 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
                if (Criteria.AllEvents == false && Criteria.IncludeRecurrent == true && (*EventsIterator)->RRule.IsEmpty() == false)
                   RecurrentEvent = new Event(**EventsIterator);
                next = *(EventsIterator++);
+	       if (debug) std::cout << " [match]" << std::endl;
+	       break;
 
             } else if (
                   (*EventsIterator)->RRule.IsEmpty() == false &&
@@ -360,17 +368,23 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
                      RecurrentEvent->DtEnd = DtEnd;
                   RecurrentEvents.push_back(new Event(*RecurrentEvent));
                   next = RecurrentEvents.back();
+		  if (debug) std::cout << " [match]" << std::endl;
                   break;
                }
 
                delete RecurrentEvent;
                RecurrentEvent = NULL;
             }
+	    if (debug) std::cout << std::endl;
          }
       }
 
       exclude = next && (std::find_if(next->ExDates->begin(), next->ExDates->end(), 
             [next](const Date &d) { return d == next->DtStart; }) != next->ExDates->end());
+      if (debug) {
+	      if (exclude) std::cout << "Excluded:        " << next->DtStart.Format() << " " << next->Summary << std::endl;
+	      else if (next != nullptr) std::cout << "Found:           " << next->DtStart.Format() << " " << next->Summary << std::endl;
+      }
 
    } while (exclude);
    return next;
