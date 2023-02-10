@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <vector>
 #include "date.h"
 
 using namespace std;
@@ -18,7 +19,7 @@ typedef enum { VCALENDAR, VEVENT, VALARM } Component;
 typedef enum { DISPLAY=0, PROCEDURE, AUDIO, EMAIL } AlarmAction;
 
 struct Recurrence {
-	Recurrence(): Freq(YEAR), Interval(0), Count(0) {}
+	Recurrence(): Freq(YEAR), Interval(0), Count(0), WeekStart(SU) {}
 	operator string() const;
 	bool IsEmpty() const { return (Interval == 0); }
 	void Clear() { Interval = 0; }
@@ -26,6 +27,8 @@ struct Recurrence {
 	TimeUnit Freq;
 	unsigned short Interval, Count;
 	Date Until;
+        Days WeekStart;
+        vector<Days> ByDay;
 };
 
 struct AlarmTrigger {

@@ -10,6 +10,7 @@
 using namespace std;
 
 typedef enum { YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, WEEK } TimeUnit;
+typedef enum { SU, MO, TU, WE, TH, FR, SA } Days;
 
 class Date {
 private:
@@ -52,6 +53,14 @@ public:
 		}
 		return 0;
 	}
+
+        Days WeekDay()
+        {
+           int d = Data[DAY];
+           int m = Data[MONTH];
+           int y = Data[YEAR];
+           return Days((d += m < 3 ? y-- : y - 2, 23*m/9 + d + 4 + y/4- y/100 + y/400)%7);  
+        }
 	
 	string Format() const;
 	operator string() const;

@@ -1,7 +1,28 @@
 #include "icalendar.h"
 #include <iostream>
+#include <vector>
 
 constexpr bool debug = false;
+
+vector<Days> to_days(string str)
+{
+   vector<Days> d;
+   while (str.size() > 0) {
+      size_t pos = str.find_first_of(',');
+      string item = str.substr(0, pos);
+
+      if (item == "SU") d.push_back(SU);
+      if (item == "MO") d.push_back(MO);
+      if (item == "TU") d.push_back(TU);
+      if (item == "WE") d.push_back(WE);
+      if (item == "TH") d.push_back(TH);
+      if (item == "FR") d.push_back(FR);
+      if (item == "SA") d.push_back(SA);
+      if (pos != string::npos) ++pos;
+      str.erase(0, pos);
+   }
+   return d;
+}
 
 void ICalendar::LoadFromFile() {
 	string Line, NextLine;
@@ -75,6 +96,9 @@ void ICalendar::LoadFromFile() {
 						NewEvent->RRule.Interval = 1;
 					NewEvent->RRule.Count = atoi(GetSubProperty(Line, "COUNT").c_str());
 					NewEvent->RRule.Until = GetSubProperty(Line, "UNTIL");
+					auto wkst = to_days(GetSubProperty(Line, "WKST"));
+                                        if (wkst.size() == 1) NewEvent->RRule.WeekStart = wkst[0];
+					NewEvent->RRule.ByDay = to_days(GetSubProperty(Line, "BYDAY"));
 				} else if (Line.find("BEGIN:VALARM") == 0) {
 					NewAlarm.Clear();
 					PrevComponent = CurrentComponent;
@@ -279,10 +303,32 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
 
 
       if (RecurrentEvent != NULL) {
-         RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
-         if (!RecurrentEvent->DtEnd.IsEmpty())
-            RecurrentEvent->DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
-         ++RecurrentEvent->RecurrenceNo;
+
+         if (!RecurrentEvent->RRule.ByDay.empty()) { // todo: what if freq is less than WEEK?
+            while (true) {
+               RecurrentEvent->DtStart[DAY] += 1; // next day
+               if (RecurrentEvent->DtStart.WeekDay() == RecurrentEvent->RRule.WeekStart) {
+                  // next interval
+                  ++RecurrentEvent->RecurrenceNo; 
+                  RecurrentEvent->DtStart = RecurrentEvent->BaseEvent->DtStart;
+                  RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RecurrenceNo * RecurrentEvent->RRule.Interval;
+                  if (!RecurrentEvent->DtEnd.IsEmpty()) {
+                     RecurrentEvent->DtEnd = RecurrentEvent->BaseEvent->DtEnd;
+                     RecurrentEvent->DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RecurrenceNo * RecurrentEvent->RRule.Interval;
+                  }
+               }
+               if (find(RecurrentEvent->RRule.ByDay.begin(), RecurrentEvent->RRule.ByDay.end(), RecurrentEvent->DtStart.WeekDay()) != RecurrentEvent->RRule.ByDay.end()) {
+                  // next maching day found
+                  break;
+               }
+            }
+         }
+         else {
+            RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
+            if (!RecurrentEvent->DtEnd.IsEmpty()) RecurrentEvent->DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
+            ++RecurrentEvent->RecurrenceNo;
+         }
+         
 	 if (debug) std::cout << "Considering (R): " << RecurrentEvent->DtStart.Format() << " " << RecurrentEvent->Summary;
          if (
                (!WithAlarm &&
