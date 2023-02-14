@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr bool debug = true;
+constexpr bool debug = false;
 
 vector<Days> to_days(string str)
 {
