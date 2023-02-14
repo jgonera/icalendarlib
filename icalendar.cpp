@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr bool debug = false;
+constexpr bool debug = true;
 
 vector<Days> to_days(string str)
 {
@@ -368,6 +368,7 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
                      ) ||
                   (WithAlarm && (*EventsIterator)->HasAlarm(Criteria.From, Criteria.To))
                ) {
+               // Match
                if (Criteria.AllEvents == false && Criteria.IncludeRecurrent == true && (*EventsIterator)->RRule.IsEmpty() == false)
                   RecurrentEvent = new Event(**EventsIterator);
                next = *(EventsIterator++);
@@ -375,6 +376,7 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
 	       break;
 
             } else if (
+                  // No Match - still needs to check if recurrent matches
                   (*EventsIterator)->RRule.IsEmpty() == false &&
                   (*EventsIterator)->DtStart < Criteria.From &&
                   ((*EventsIterator)->RRule.Until.IsEmpty() || (*EventsIterator)->RRule.Until >= Criteria.From) &&
@@ -383,24 +385,26 @@ Event* ICalendar::Query::GetNextEvent(bool WithAlarm) {
                RecurrentEvent = new Event(**EventsIterator);
 
                Difference = Criteria.From.Difference(DtEnd, RecurrentEvent->RRule.Freq);
-               Rest = Difference%RecurrentEvent->RRule.Interval;
+               Rest = Difference % RecurrentEvent->RRule.Interval;
 
                if (Rest != 0)
                   Difference += RecurrentEvent->RRule.Interval - Rest;
 
-               //cout << Criteria.From.Format() << endl;
-               //cout << DtEnd.Format() << endl;
-               //cout << Difference << endl;
+               // if using byday, step one interval back. Need to check individual days until next interval
+               if (!(*EventsIterator)->RRule.ByDay.empty()) Difference -= RecurrentEvent->RRule.Interval;
+
                RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += Difference;
                DtEnd[RecurrentEvent->RRule.Freq] += Difference;
                RecurrentEvent->RecurrenceNo = Difference / RecurrentEvent->RRule.Interval;
 
-               // <= because DtEnd is non-inclusive (according to RFC 2445)
+               /*
+               // DtEnd is non-inclusive (according to RFC 2445)
                while (DtEnd <= Criteria.From) {
                   RecurrentEvent->DtStart[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
                   DtEnd[RecurrentEvent->RRule.Freq] += RecurrentEvent->RRule.Interval;
                   ++RecurrentEvent->RecurrenceNo;
                }
+               */
 
                if (
                      (!WithAlarm &&
