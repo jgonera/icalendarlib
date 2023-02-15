@@ -41,7 +41,7 @@ private:
 		if (Pos == string::npos)
 			return "";
 		Pos += strlen(SubProperty) + 1;
-		return Line.substr(Pos, Line.find_first_of(';', Pos)-Pos);
+		return Line.substr(Pos, Line.find_first_of(";\r", Pos)-Pos);
 	}
 	void FixLineEnd(string &Line, unsigned int Length) {
 		if (Length > 0 && Line[Length-1] == '\r')
