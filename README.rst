@@ -1,6 +1,9 @@
 iCalendarLib
 ============
 
+**Note: This repository is archived. For current maintained version see
+https://github.com/jp-embedded/icalendarlib**
+
 A simple library written in C++ used for parsing iCalendar (.ics) files.
 
 It uses only standard C/C++ libraries so it should compile on any operating
